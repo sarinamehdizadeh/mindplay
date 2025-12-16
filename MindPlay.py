@@ -54,18 +54,25 @@ class DataBase:
         self.connection.close()
         return result
 
-    def GetStats(self):
-        self.connection = sqlite3.connect(self.__db_name)
-        df = pd.read_sql("SELECT * FROM MindPlay" , self.connection)
-        self.connection.close()
-        if df.empty:
-            return None
+    # def GetStats(self):
+    #     self.connection = sqlite3.connect(self.__db_name)
+    #     df = pd.read_sql("SELECT * FROM MindPlay" , self.connection)
+    #     self.connection.close()
+    #     if df.empty:
+    #         return None
 
-        return {
-            "total": len(df),
-            "average_attempts" : df["attemps"].mean(),
-            "best_attempt" : df["attemps"].min()
-        }
+    #     return {
+    #         "total": len(df),
+    #         "average_attempts" : df["attemps"].mean(),
+    #         "best_attempt" : df["attemps"].min()
+        # }
+
+
+
+
+
+
+
     def get_max_id(self):
         self.connection = sqlite3.connect(self.__db_name)
         self.cursor = self.connection.cursor()
@@ -92,15 +99,15 @@ db = DataBase('MindPlay.db')
 
 # ////////////////////////////////////////////////////  function
 target_number = random.randint(0,100)
-print(target_number)
-attempts = 0 
+
+attempts = 1 
 
 def SubmitGuess():
     global attempts
     player = entry_name.get()
     guess = entry_guess.get()
     MAX_ATTEMPTS = 7
-    if not guess and player :
+    if guess==None: 
         messagebox.showerror('error' , 'field is empty')
         return
     if guess.isdigit() == False:
@@ -157,7 +164,6 @@ def ResetGame():
     global target_number
     global attempts
     target_number = random.randint(0,100)
-    print(target_number)
     attempts = 0
     entry_guess.delete(0,END)
 
@@ -181,10 +187,10 @@ def LoadGames():
         listbox.insert(END, game_text)
         
 
-        if result == "loss":
+        if result == "lose":
             listbox.itemconfig(index , bg = "#ff6b6b")  #red
         else :
-            if attempts == 1 or attempts == 0:
+            if attempts == 1:
                 listbox.itemconfig(index, bg="#b7f7c1")  # light green
             elif attempts <= 3:
                 listbox.itemconfig(index, bg="#7bed9f")  # green
@@ -195,17 +201,17 @@ def LoadGames():
 
 
 
-def ShowStatus():
-    stats = db.GetStats()
-    if stats is None:
-        messagebox.showerror('error' , 'no data is available')
-        return
-    messagebox.showinfo(
-        "game data",
-        f"all games untill now: {stats['total_games']}\n"
-        f"average attempts are{stats['avg_attempts']:.2f}\n" #what???
-        f"best record was:{stats['best_attempt']}"
-    )
+# def ShowStatus():
+#     stats = db.GetStats()
+#     if stats is None:
+#         messagebox.showerror('error' , 'no data is available')
+#         return
+#     messagebox.showinfo(
+#         "game data",
+#         f"all games untill now: {stats['total_games']}\n"
+#         f"average attempts are{stats['avg_attempts']:.2f}\n" #what???
+#         f"best record was:{stats['best_attempt']}"
+#     )
 
 
 
