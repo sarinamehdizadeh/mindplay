@@ -72,6 +72,13 @@ class DataBase:
         self.cursor.execute("SELECT MAX(id) FROM MindPlay")
         result = self.cursor.fetchall()
         return result
+    def Get_Games_By_Attempts(self):
+        self.connection = sqlite3.connect(self.__db_name)
+        self.cursor = self.connection.cursor()
+        self.cursor.execute("SELECT * FROM MindPlay ORDER BY attemps ASC")
+        result = self.cursor.fetchall()
+        self.connection.close()
+        return result
 
 
 
@@ -85,19 +92,26 @@ db = DataBase('MindPlay.db')
 
 # ////////////////////////////////////////////////////  function
 target_number = random.randint(0,100)
+print(target_number)
 attempts = 0 
 
 def SubmitGuess():
+    global attempts
     player = entry_name.get()
     guess = entry_guess.get()
+    MAX_ATTEMPTS = 7
     if not guess and player :
         messagebox.showerror('error' , 'field is empty')
         return
     if guess.isdigit() == False:
         messagebox.showerror('error' , 'only numbers!')
-        return
+        return  
+    if attempts> MAX_ATTEMPTS:
+        messagebox.showinfo("Game Over", "You lost!")
+        SaveGame(result =False)
+        ResetGame()
+
     guess = int(guess)
-    global attempts
     if guess < target_number:
         messagebox.showinfo('!' , 'try a larger number!')
         attempts += 1 
@@ -106,35 +120,80 @@ def SubmitGuess():
         attempts += 1 
     else:
         messagebox.showinfo('congrats' , 'good job!')
-        SaveGame()
+        SaveGame(result =True)
         ResetGame()
 
 
-def SaveGame():
-    player = entry_name.get()
-    now = datetime.now()
-    player_time_str = now.strftime("%Y-%m-%d %H:%M:%S")
-    # ==============================auto id 
-    max_id = db.get_max_id()[0][0]
-    if max_id is None:
-        new_id=1
+def SaveGame(result):
+    if result == True:
+        player = entry_name.get()
+        now = datetime.now()
+        player_time_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        # ==============================auto id 
+        max_id = db.get_max_id()[0][0]
+        if max_id is None:
+            new_id=1
+        else:
+            new_id = max_id+1
+        # ======================================
+        db.insert_game(new_id,player , target_number , attempts , "win", player_time_str )
+        LoadGames()
     else:
-        new_id = max_id+1
-    # ======================================
-    db.insert_game(new_id,player , target_number , attempts , "win", player_time_str )
-    LoadGames()
+        player = entry_name.get()
+        now = datetime.now()
+        player_time_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        # ==============================auto id 
+        max_id = db.get_max_id()[0][0]
+        if max_id is None:
+            new_id=1
+        else:
+            new_id = max_id+1
+        # ======================================
+        db.insert_game(new_id,player , target_number , attempts , "loss", player_time_str )
+        LoadGames()
+
 
 def ResetGame():
     global target_number
     global attempts
     target_number = random.randint(0,100)
+    print(target_number)
     attempts = 0
     entry_guess.delete(0,END)
 
 def LoadGames():
-    listbox.delete(0,END)
-    for row in db.GetAllGames():
-        listbox.insert(END , row)
+    listbox.delete(0, END)
+    games = db.Get_Games_By_Attempts()
+
+    for row in games:
+        attempts = row[3]
+        result = row [4]
+
+        game_text = (
+            f"ID:{row[0]} | "
+            f"Player:{row[1]} | "
+            f"Target:{row[2]} | "
+            f"Attempts:{row[3]} | "
+            f"Result:{row[4]} | "
+            f"Time:{row[5]}"
+        )
+        index = listbox.size()
+        listbox.insert(END, game_text)
+        
+
+        if result == "loss":
+            listbox.itemconfig(index , bg = "#ff6b6b")  #red
+        else :
+            if attempts == 1 or attempts == 0:
+                listbox.itemconfig(index, bg="#b7f7c1")  # light green
+            elif attempts <= 3:
+                listbox.itemconfig(index, bg="#7bed9f")  # green
+            elif attempts <= 5:
+                listbox.itemconfig(index, bg="#feca57")  # yellow
+            elif attempts <= 7:
+                listbox.itemconfig(index, bg="#ffa502")  # orange
+
+
 
 def ShowStatus():
     stats = db.GetStats()
@@ -154,7 +213,7 @@ def ShowStatus():
 
 window = Tk()
 window.title("Mind Play Game")
-window.geometry("500x400")
+window.geometry("700x300")
 padx = 5
 pady = 5
 vazir_font = Font(family='Vazir' , size=13)
