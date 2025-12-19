@@ -106,8 +106,8 @@ def SubmitGuess():
     global attempts
     player = entry_name.get()
     guess = entry_guess.get()
-    MAX_ATTEMPTS = 7
-    if guess==None: 
+    MAX_ATTEMPTS = 6
+    if not guess and not player : 
         messagebox.showerror('error' , 'field is empty')
         return
     if guess.isdigit() == False:
@@ -187,7 +187,7 @@ def LoadGames():
         listbox.insert(END, game_text)
         
 
-        if result == "lose":
+        if result == "loss":
             listbox.itemconfig(index , bg = "#ff6b6b")  #red
         else :
             if attempts == 1:
@@ -241,6 +241,16 @@ listbox = Listbox(window , font= vazir_font)
 listbox.grid(row=2 , column=0 , columnspan=2 , sticky="ew" , padx=padx , pady=pady )
 button_submitguess = Button(window , text='submit' , command= SubmitGuess , font= vazir_font)
 button_submitguess.grid(row=3 , column= 0 , columnspan=2, sticky= "ew" ,padx=padx , pady=pady)
+
+def focus_to_guess(event):
+    entry_guess.focus_set()
+
+def submit_with_enter(event):
+    SubmitGuess()
+
+entry_name.bind("<Return>", focus_to_guess)
+entry_guess.bind("<Return>", submit_with_enter)
+entry_name.focus_set()
 
 
 LoadGames()
